@@ -1,0 +1,65 @@
+{
+  "vcon": "0.4.0",
+  "uuid": "018c8a7e-7f5d-8000-9c4d-5e6f7a8b9c0d",
+  "created_at": "2025-10-20T10:00:00.000Z",
+  "subject": "Call Transfer Example",
+  "parties": [
+    {
+      "tel": "+1-555-1111",
+      "name": "Customer Alice",
+      "role": "transferee"
+    },
+    {
+      "tel": "+1-555-2222",
+      "name": "Agent Bob",
+      "role": "transferor"
+    },
+    {
+      "tel": "+1-555-3333",
+      "name": "Specialist Carol",
+      "role": "transfer_target"
+    }
+  ],
+  "dialog": [
+    {
+      "type": "recording",
+      "start": "2025-10-20T10:00:00.000Z",
+      "duration": 45.0,
+      "parties": [0, 1],
+      "originator": 0,
+      "mediatype": "audio/x-wav",
+      "url": "https://storage.example.com/original-call.wav",
+      "content_hash": "SHA-512:c6RjPZ9xwN5zXEjS3o4CD1Ai7CWNXzZei1UsKfPu8e7J2PG0ZaZzuR/FIPMJhwyzA9mzywWfDgqInQFL8UhcRi=="
+    },
+    {
+      "type": "recording",
+      "start": "2025-10-20T10:01:00.000Z",
+      "duration": 15.0,
+      "parties": [1, 2],
+      "originator": 1,
+      "mediatype": "audio/x-wav",
+      "url": "https://storage.example.com/consultation-call.wav",
+      "content_hash": "SHA-512:d7SkQa0yxO6aYFkT4p5DE2Bj8DXOYaafj2VtLgQv9f8K3QH1AbA0vS/GJQNKix0aB0n0zxXgEhrJoRGM9VidSj=="
+    },
+    {
+      "type": "transfer",
+      "start": "2025-10-20T10:01:20.000Z",
+      "transferee": 0,
+      "transferor": 1,
+      "transfer_target": 2,
+      "original": 0,
+      "consultation": 1,
+      "target_dialog": 3
+    },
+    {
+      "type": "recording",
+      "start": "2025-10-20T10:01:25.000Z",
+      "duration": 120.0,
+      "parties": [0, 2],
+      "originator": 1,
+      "mediatype": "audio/x-wav",
+      "url": "https://storage.example.com/target-call.wav",
+      "content_hash": "SHA-512:e8TlRb1zyP7bZGlU5q6EF3Ck9EYPZbbgk3WuMhRw0g9L4RI2BcB1wT/HKROLjy1bC1o1ayYhFisKpSHN0WjeTk=="
+    }
+  ]
+}

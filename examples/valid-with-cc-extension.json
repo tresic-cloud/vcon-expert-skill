@@ -1,0 +1,66 @@
+{
+  "vcon": "0.4.0",
+  "uuid": "018c8a7e-6f4d-8000-8b3c-4d5e6f7a8b9c",
+  "created_at": "2025-10-20T09:15:00.000Z",
+  "updated_at": "2025-10-20T09:20:00.000Z",
+  "subject": "Inbound Sales Call",
+  "extensions": ["CC"],
+  "parties": [
+    {
+      "tel": "+1-800-555-1234",
+      "name": "Support Line",
+      "role": "ivr"
+    },
+    {
+      "tel": "+1-555-9876",
+      "name": "Customer Jane Doe",
+      "customer_id": "CUST-98765",
+      "role": "customer"
+    },
+    {
+      "tel": "+1-555-4321",
+      "name": "Agent John Smith",
+      "role": "agent",
+      "skill": "technical_support",
+      "queue_time": 45.5,
+      "ring_time": 8.2
+    }
+  ],
+  "dialog": [
+    {
+      "type": "recording",
+      "start": "2025-10-20T09:15:30.000Z",
+      "duration": 280.0,
+      "parties": [1, 2],
+      "originator": 1,
+      "mediatype": "audio/x-wav",
+      "filename": "call-recording.wav",
+      "url": "https://callcenter.example.com/recordings/20251020-091530.wav",
+      "content_hash": "SHA-512:b5QiOY8wvM4yWDiR2n3BC0Zh6BVMWyYdh0TqJeOt7d6I1OF9YZYztQ/EHOLIgvxwZ8lyxwVeCfpHmPEK7TgbQh==",
+      "disposition": "resolved",
+      "campaign": "Q4_2025_Support",
+      "interaction": "INT-20251020-001234",
+      "skill": "technical_support"
+    }
+  ],
+  "analysis": [
+    {
+      "type": "transcript",
+      "dialog": 0,
+      "vendor": "ContactCenterAI",
+      "schema": "3.0",
+      "mediatype": "application/json",
+      "body": "{\"segments\":[{\"speaker\":1,\"text\":\"My internet is not working\",\"start\":0,\"confidence\":0.98},{\"speaker\":2,\"text\":\"I can help you troubleshoot that\",\"start\":2.5,\"confidence\":0.99}]}",
+      "encoding": "json"
+    },
+    {
+      "type": "summary",
+      "dialog": 0,
+      "vendor": "ContactCenterAI",
+      "schema": "3.0",
+      "mediatype": "text/plain",
+      "body": "Customer reported internet connectivity issues. Agent walked through troubleshooting steps including modem reset. Issue resolved after checking cable connection.",
+      "encoding": "none"
+    }
+  ]
+}
