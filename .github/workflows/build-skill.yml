@@ -1,0 +1,108 @@
+name: Build Skill Artifact
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - '**.md'
+      - '**.json'
+      - '**.vcon'
+      - 'vcon-documentation/**'
+      - 'examples/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - '**.md'
+      - '**.json'
+      - '**.vcon'
+      - 'vcon-documentation/**'
+      - 'examples/**'
+      - '.github/workflows/**'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Create skill artifact
+      run: |
+        echo "Creating skill artifact with proper directory structure..."
+
+        # Create a directory structure that Claude Desktop expects
+        mkdir -p vcon-expert-skill
+
+        # Copy skill files to the skill directory
+        cp SKILL.md vcon-expert-skill/
+        cp README.md vcon-expert-skill/
+        cp -r vcon-documentation vcon-expert-skill/
+        cp -r examples vcon-expert-skill/
+
+        # Create a zip file containing the skill directory
+        zip -r vcon-expert-skill.zip vcon-expert-skill/ \
+          -x "*.git*" "node_modules/*" ".github/*" "*.zip" "__pycache__/*" "*.pyc"
+
+        # List the contents for verification
+        echo "Archive contents:"
+        unzip -l vcon-expert-skill.zip
+
+        # Also verify the directory structure
+        echo "Directory structure within zip:"
+        unzip -t vcon-expert-skill.zip | head -20
+
+    - name: Upload skill artifact
+      uses: actions/upload-artifact@v4
+      if: github.event_name != 'pull_request'
+      with:
+        name: vcon-expert-skill
+        path: vcon-expert-skill.zip
+        retention-days: 30
+        if-no-files-found: error
+        overwrite: true
+
+    - name: Upload to Release (on main branch)
+      uses: softprops/action-gh-release@v2
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      with:
+        files: vcon-expert-skill.zip
+        generate_release_notes: true
+        tag_name: skill-v${{ github.run_number }}
+        name: "vCon Expert Skill v${{ github.run_number }}"
+        body: |
+          🤖 Automated build of the vCon Expert Skill.
+
+          ## 📦 Package Structure:
+          ```
+          vcon-expert-skill/
+          ├── SKILL.md              # Main skill definition for Claude
+          ├── README.md             # User guide and documentation
+          ├── vcon-documentation/   # IETF vCon specifications
+          └── examples/             # Sample vCon files and usage examples
+          ```
+
+          ## 🚀 Installation:
+          1. Download the `vcon-expert-skill.zip` file
+          2. Extract the contents to get the `vcon-expert-skill/` directory
+          3. Upload `vcon-expert-skill/SKILL.md` to Claude as a custom skill
+
+          ## 🔗 Quick Access:
+          - **Artifact Download**: Available in the Actions tab
+          - **Direct Download**: [vcon-expert-skill.zip](https://github.com/${{ github.repository }}/releases/download/skill-v${{ github.run_number }}/vcon-expert-skill.zip)
+
+          ## 📋 What's New:
+          - Complete vCon format expertise for Claude
+          - IETF specification compliance
+          - Sample conversations and examples
+          - Comprehensive documentation
+
+          ---
+          *Built from commit ${{ github.sha }}*
+        draft: false
+        prerelease: false

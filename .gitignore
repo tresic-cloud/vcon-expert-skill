@@ -283,8 +283,6 @@ go.sum
 .git/
 .gitattributes.local
 
-# GitHub
-.github/
 
 # CI/CD
 # =====
