@@ -2,6 +2,10 @@
 
 This directory contains sample vCon files for testing the validation Skill.
 
+## Available Examples
+
+### vCon JSON Files
+
 ## Files
 
 ### valid-simple.vcon
@@ -48,3 +52,34 @@ Follow the vCon structure:
 ```
 
 See Skill.md for complete field specifications.
+
+## vCon ZIP Bundle Examples
+
+For examples and guidance on creating and working with vCon ZIP Bundles (.vconz files), see:
+
+📦 **[README-BUNDLES.md](./README-BUNDLES.md)** - Comprehensive guide including:
+- Bundle structure and format
+- Single and multi-vCon bundles
+- Deduplication examples
+- Signed and encrypted vCon bundles
+- Redacted vCon bundles
+- Creation and extraction workflows
+- Best practices and troubleshooting
+
+### Quick Bundle Reference
+
+A vCon ZIP Bundle packages one or more vCons with their media files:
+
+```
+example.vconz
+├── manifest.json           # Bundle metadata
+├── files/                 # Media files (hash-named)
+│   ├── sha512-GLy6...wav
+│   └── sha512-Abc...pdf
+└── vcons/                 # vCon JSON files
+    └── {uuid}.json
+```
+
+**Media Type**: `application/vcon+zip`
+**File Extension**: `.vconz`
+**Specification**: draft-miller-vcon-zip-bundle-00

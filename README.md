@@ -72,6 +72,23 @@ Ask Claude anything about vCons:
 - Multi-vendor interoperability
 - Confidence scores, speaker identification
 
+### 5. vCon ZIP Bundle Support (.vconz)
+
+#### Package & Distribution
+- Create self-contained archives with all media files
+- Bundle multiple vCons with automatic deduplication
+- Hash-based file naming for integrity verification
+- Supports all vCon security forms (unsigned, signed, encrypted)
+- Offline processing capability
+- Simplified distribution and archival
+
+#### Bundle Features
+- Flat file structure with manifest
+- Multi-vCon support with relationship tracking
+- Extension support for future vCon features
+- Platform-independent ZIP format
+- Media type: `application/vcon+zip`
+
 ## Latest Specification Updates (July 2025)
 
 This skill incorporates the latest changes from draft-ietf-vcon-vcon-core-00:
@@ -79,8 +96,9 @@ This skill incorporates the latest changes from draft-ietf-vcon-vcon-core-00:
 - **Version**: 0.3.0 (moving toward v1.0)
 - **New Fields**: `must_support`, `did`, `product`, `timezone`
 - **Extension Framework**: Compatible vs. Incompatible classification
-- **Media Types**: Registered `application/vcon+json` and `application/vcon+gzip`
+- **Media Types**: Registered `application/vcon+json`, `application/vcon+gzip`, and `application/vcon+zip`
 - **UUID**: Preference for UUID v8 with FQHN-based generation
+- **vCon ZIP Bundle (.vconz)**: New packaging format for self-contained archives with media files
 
 ## File Structure
 
@@ -92,6 +110,7 @@ vcon-expert-skill/
 │   ├── draft-ietf-vcon-vcon-core-01
 │   ├── draft-ietf-vcon-cc-extension-01
 │   ├── draft-ietf-vcon-privacy-primer-00
+│   ├── draft-miller-vcon-zip-bundle-00
 │   ├── _draft-ietf-vcon-mimi-messages-00
 │   └── _draft-ietf-vcon-overview-00
 └── examples/                   # Example vCon files
@@ -221,6 +240,8 @@ Claude: I'll validate your vCon against the IETF specification...
 "What's the difference between inline and external content?"
 "Explain vCon signing and encryption"
 "How do I create a custom extension?"
+"How do I create vCon ZIP bundles?"
+"What are the best practices for bundling multiple vCons?"
 ```
 
 #### Analysis
@@ -384,6 +405,14 @@ and implementation code in all three languages]
 - Transcript aggregation
 - Statistical summaries
 - Multi-format export (JSON, CSV, XML)
+
+### vCon ZIP Bundle Operations
+- Bundle creation with automatic file resolution
+- Multi-vCon bundling with deduplication
+- Bundle extraction and validation
+- File integrity verification (SHA-512)
+- Security form preservation (JWS/JWE)
+- Extension support for custom data
 
 ## Key Concepts Explained
 

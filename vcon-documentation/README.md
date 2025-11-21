@@ -12,6 +12,12 @@ This directory contains the IETF draft documents that define the vCon standard. 
 ✅ **draft-ietf-vcon-cc-extension-01** (31 KB)
    - Contact Center specific extensions
 
+✅ **draft-miller-vcon-zip-bundle-00** (87 KB)
+   - vCon ZIP Bundle (.vconz) packaging format
+   - Self-contained archives with media files
+   - Multi-vCon support with automatic deduplication
+   - Media type: application/vcon+zip
+
 ✅ **_draft-ietf-vcon-mimi-messages-00** (59 KB)
    - MIMI messaging integration
 
@@ -20,6 +26,18 @@ This directory contains the IETF draft documents that define the vCon standard. 
 
 ✅ **_draft-ietf-vcon-overview-00** (48 KB)
    - vCon overview and use cases
+
+✅ **draft-howe-vcon-wtf-extension-01**
+   - World Transcription Format extension
+
+✅ **draft-howe-vcon-consent-00**
+   - Consent management for vCons
+
+✅ **draft-howe-vcon-lifecycle-00**
+   - vCon lifecycle management
+
+✅ **draft-howe-vcon-lawful-basis-00**
+   - Lawful basis for conversation processing
 
 ## Status
 

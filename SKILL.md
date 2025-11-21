@@ -25,6 +25,7 @@ Filesystem:read_file("./vcon-documentation/draft-ietf-vcon-vcon-core-01")
 - `./vcon-documentation/draft-ietf-vcon-cc-extension-01` - Contact Center extension
 - `./vcon-documentation/draft-ietf-vcon-privacy-primer-00` - Privacy considerations
 - `./vcon-documentation/draft-howe-vcon-wtf-extension-01` - World Transcription Format extension
+- `./vcon-documentation/draft-miller-vcon-zip-bundle-00` - ZIP Bundle packaging format
 - `./vcon-documentation/_draft-ietf-vcon-mimi-messages-00` - MIMI messaging extension
 - `./vcon-documentation/_draft-ietf-vcon-overview-00` - Overview and use cases
 
@@ -77,6 +78,7 @@ This skill provides **comprehensive expertise on vCon (Virtualized Conversations
 **Media Type Registration:**
 - `application/vcon+json` - Standard JSON vCon
 - `application/vcon+gzip` - Compressed vCon format
+- `application/vcon+zip` - vCon ZIP Bundle (.vconz) format
 
 ## Core vCon Architecture
 
@@ -219,6 +221,316 @@ Related documents and files:
   "content_hash": "SHA-512:z4PhNX7vuL..."
 }
 ```
+
+## vCon ZIP Bundle Format (.vconz)
+
+### Overview
+
+The vCon ZIP Bundle (.vconz) format provides a standardized way to package one or more vCons with their associated media files into a single, self-contained archive. This addresses the challenge of external file dependencies while enabling offline processing and simplified distribution.
+
+**Key Features:**
+- **Self-containment**: All referenced files included in the archive
+- **Multi-vCon support**: Bundle multiple related vCons with automatic deduplication
+- **Integrity preservation**: Original content hashes maintained for verification
+- **Platform independence**: Standard ZIP format supported everywhere
+- **Simplicity**: Flat structure with hash-based file naming
+- **Offline processing**: No network dependencies after bundle creation
+
+### Bundle Structure
+
+```
+bundle.vconz
+├── manifest.json                    # Bundle format identifiers
+├── files/                          # All media files (flat, deduplicated)
+│   ├── sha512-GLy6IPa...UQ.wav    # Hash-named with extensions
+│   ├── sha512-Def456...XYZ.pdf
+│   └── sha512-Transcript...ABC.json
+├── vcons/                          # All vCon JSON files
+│   ├── 0195544a-b9b1-8ee4-b9a2-279e0d16bc46.json
+│   └── 01955450-1234-5678-9abc-def012345678.json
+└── extensions/                     # Future vCon extensions (optional)
+    └── [extension-name]/
+        ├── metadata.json
+        └── files/
+            └── sha256-ExtData...GHI.cbor
+```
+
+### Core Components
+
+#### manifest.json
+
+Minimal bundle metadata:
+```json
+{
+  "format": "vcon-bundle",
+  "version": "1.0"
+}
+```
+
+#### vCon Files
+
+- Stored as `vcons/[uuid].json`
+- Complete, original vCon in any security form (unsigned, signed JWS, encrypted JWE)
+- All external URL references and content_hash values preserved exactly as received
+
+#### Media Files
+
+- Stored in flat `files/` directory
+- Named using pattern: `[hash-algorithm]-[base64url-hash].[extension]`
+- Example: `sha512-GLy6IPaIUM1GqzZqfIPZlWjaDsNgNvZM...UQ.wav`
+- Automatic deduplication: identical content (same hash) stored only once
+
+### File Naming Conventions
+
+**Hash-Based Filenames:**
+- Format: `[algorithm]-[hash].[extension]`
+- SHA-512 MUST be supported (primary algorithm)
+- Additional algorithms MAY be supported
+- Extensions determined by:
+  1. MIME type from vCon mediatype field (preferred)
+  2. Content analysis (magic bytes)
+  3. Original URL extension
+  4. Generic `.bin` if undetermined
+
+**Multi-Hash Support:**
+When a vCon has multiple content hashes:
+- Use first hash for filename generation
+- Prefer SHA-512 if present in array
+- Verify ALL hashes during creation and extraction
+
+### Bundle Creation Process
+
+**For Unsigned vCons:**
+1. Parse JSON to identify external references
+2. Download files from HTTPS URLs
+3. Verify content hashes (ALL algorithms)
+4. Store in files/ directory with hash-based names
+5. Preserve original vCon JSON
+
+**For Signed vCons (JWS):**
+1. Preserve complete JWS structure
+2. Decode payload to identify external references
+3. Resolve and bundle external files
+4. Save original JWS structure (not payload)
+
+**For Encrypted vCons (JWE):**
+1. Preserve complete JWE structure
+2. If decryption keys available: decrypt, resolve files, re-encrypt
+3. If keys unavailable: include encrypted vCon without resolving files
+4. Save original JWE structure
+
+**Multi-vCon Bundling:**
+1. Collect all vCons to include
+2. Resolve files for each vCon
+3. Automatic deduplication by content_hash
+4. Store each vCon as vcons/[uuid].json
+5. Include referenced vCons (via Group objects) when available
+
+### Bundle Extraction and Usage
+
+**Extraction Process:**
+1. Extract ZIP to directory
+2. Validate bundle structure (manifest.json, vcons/, files/)
+3. Verify bundle format and version
+4. Discover vCons by scanning vcons/ directory
+5. For each vCon:
+   - Parse according to security form
+   - Identify file references via content_hash
+   - Verify files exist in files/
+   - Verify file integrity using content_hash
+
+**File Resolution:**
+```javascript
+// To resolve a file from a vCon:
+const contentHash = "sha512-GLy6IPa...UQ";
+const mediatype = "audio/wav";
+const extension = getExtension(mediatype); // .wav
+const filePath = `files/${contentHash}.${extension}`;
+```
+
+### vCon References and Relationships
+
+**Group Objects:**
+vCons may reference other vCons through Group Objects. When bundling:
+- Referenced vCons SHOULD be included as separate files
+- Group Object's uuid field enables discovery
+- Bundle readers check for content_hash in files/ before external resolution
+
+**Reference Discovery:**
+1. Scan vcons/ directory for all *.json files
+2. For each vCon, check group[] array for uuid fields
+3. Verify referenced vCons present in bundle
+4. Build relationship graph
+
+### Security Considerations
+
+**Content Verification:**
+- All files MUST be verified against ALL content_hash values
+- Bundle creators MUST validate HTTPS certificates
+- SHA-512 MUST be supported
+- Hash verification failure MUST fail bundle creation
+
+**Security Form Preservation:**
+- Signed vCons: Preserve complete JWS, verify signatures
+- Encrypted vCons: Preserve complete JWE, never downgrade
+- Bundle creators MUST NOT modify vCon content or remove signatures
+
+**Privacy Protection:**
+- Preserve privacy controls from original vCons
+- Maintain redaction integrity
+- Handle party identification per privacy regulations
+- ZIP-level encryption MAY be used but doesn't replace vCon-level security
+
+**File Deduplication Security:**
+- Same hash = identical content (cryptographic guarantee)
+- No information leakage from file reuse
+- Each vCon's content_hash independently verifiable
+
+### Bundle Validation
+
+Bundle creators MUST validate:
+1. Hash verification (all content hashes match)
+2. File completeness (all external references resolved)
+3. Security form integrity (signatures/encryption intact)
+4. UUID uniqueness (no duplicate vCon UUIDs)
+5. File accessibility (all files referenced by at least one vCon)
+6. Manifest validity (valid JSON with required fields)
+
+### Extension Support
+
+The `extensions/` directory supports future vCon extensions:
+
+```
+extensions/
+└── [extension-name]/
+    ├── metadata.json      # Extension metadata and schema
+    └── files/            # Extension-specific files
+        └── [hash-names]  # Following same naming conventions
+```
+
+**Extension Metadata:**
+```json
+{
+  "extension_name": "mimi-messages",
+  "extension_version": "1.0",
+  "vcon_version_compatibility": ["0.4.0"],
+  "bundle_format_version": "1.0",
+  "description": "MIMI protocol message support for vCon"
+}
+```
+
+### Bundle Examples
+
+#### Single vCon Bundle
+```
+simple-call.vconz
+├── manifest.json
+├── files/
+│   ├── sha512-GLy6IPa...UQ.wav
+│   └── sha512-Transcript...XYZ.json
+└── vcons/
+    └── 0195544a-b9b1-8ee4-b9a2-279e0d16bc46.json
+```
+
+#### Multi-vCon Bundle with Deduplication
+```
+support-case.vconz
+├── manifest.json
+├── files/
+│   ├── sha512-Call1Audio...ABC.wav
+│   ├── sha512-Call2Audio...DEF.wav
+│   ├── sha512-SharedDoc...GHI.pdf    # Referenced by both vCons!
+│   ├── sha512-Transcript1...JKL.json
+│   └── sha512-Transcript2...MNO.json
+└── vcons/
+    ├── 0195544a-b9b1-8ee4-b9a2-279e0d16bc46.json
+    └── 0195544b-c2d3-4e5f-6a7b-8c9d0e1f2a3b.json
+```
+
+#### Redacted vCon Bundle
+```
+redacted-call.vconz
+├── manifest.json
+├── files/
+│   ├── sha512-RedactedAudio...ABC.wav
+│   ├── sha512-OriginalAudio...DEF.wav
+│   └── sha512-RedactedTranscript...GHI.json
+└── vcons/
+    ├── 01955460-aaaa-bbbb-cccc-ddddeeeeeeee.json  # Original
+    └── 01955461-ffff-gggg-hhhh-iiiijjjjkkkk.json  # Redacted
+```
+
+### Implementation Requirements
+
+**MUST Support:**
+- Multi-vCon bundling with automatic deduplication
+- All vCon content arrays (parties, dialog, analysis, attachments)
+- All three security forms (unsigned, signed JWS, encrypted JWE)
+- SHA-512 content hash verification
+- Hash-based file naming with extension determination
+- Standard ZIP format with specified structure
+- vCon discovery via vcons/ directory scanning
+- File lookup via content_hash values
+- Group object reference handling
+
+**SHOULD Support:**
+- JWS signature verification
+- JWE decryption (with appropriate keys)
+- Additional hash algorithms (SHA-256)
+- Bundle validation and integrity checking
+- Extension directory support
+- Efficient large file handling (streaming)
+
+**MAY Support:**
+- Compression optimization
+- Incremental bundle updates
+- Bundle format migration tools
+- Custom extension handling
+- ZIP-level encryption
+- Bundle analysis tools
+
+### Error Handling
+
+**Bundle Creation Errors:**
+- Network failures: Retry with backoff, fail after max attempts
+- Hash mismatches: MUST fail with expected vs actual
+- Missing files: MUST fail unless configured to skip
+- Access denied: MUST fail, do not retry
+- Invalid JWS: SHOULD warn, MAY continue
+- JWE decryption failure: MUST fail
+- Missing keys: MUST fail with clear error
+
+**Bundle Extraction Errors:**
+- Corrupted ZIP: MUST fail
+- Missing manifest.json: MUST fail
+- Missing vcons/ directory: MUST fail
+- Hash verification failure: MUST fail unless configured for warnings
+- JWS signature failure: SHOULD warn, MAY continue
+- Missing files: MUST fail if referenced in vCon
+- Orphaned files: MAY warn if not referenced
+
+### Best Practices
+
+**Bundle Creation:**
+1. Always validate content hashes before including files
+2. Use HTTPS exclusively for external URLs
+3. Preserve original vCon security forms
+4. Include related vCons from Group references
+5. Document bundle purpose in accompanying metadata
+
+**Bundle Distribution:**
+1. Consider ZIP-level encryption for sensitive bundles
+2. Verify bundle integrity before distribution
+3. Provide bundle validation tools to recipients
+4. Document required decryption keys separately
+5. Use secure channels for bundle transmission
+
+**Bundle Storage:**
+1. Store bundles with descriptive names (e.g., `case-12345-2025-01-15.vconz`)
+2. Index bundles by vCon UUIDs for fast lookup
+3. Maintain bundle metadata (creation date, source, purpose)
+4. Implement retention policies
+5. Regular integrity verification
 
 ## Multi-Language Code Generation
 
@@ -1286,6 +1598,15 @@ async function encryptVCon(signedVCon, publicKey) {
   - Use cases and scenarios
   - Architecture patterns
   - Integration guidance
+
+- **draft-miller-vcon-zip-bundle-00** (November 2025)
+  - vCon ZIP Bundle (.vconz) packaging format
+  - Self-contained archives with media files
+  - Multi-vCon support with automatic deduplication
+  - Hash-based file naming and integrity verification
+  - Supports all vCon security forms (unsigned, signed, encrypted)
+  - Offline processing and simplified distribution
+  - Media type: application/vcon+zip
 
 - **draft-howe-vcon-wtf-extension-01**
   - World Transcription Format extension
