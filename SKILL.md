@@ -17,11 +17,11 @@ When performing any vCon operations, Claude MUST:
 
 **Correct Example:**
 ```
-Filesystem:read_file("./vcon-documentation/draft-ietf-vcon-vcon-core-01")
+Filesystem:read_file("./vcon-documentation/draft-ietf-vcon-vcon-core-02")
 ```
 
 **Files bundled in this skill:**
-- `./vcon-documentation/draft-ietf-vcon-vcon-core-01` - Core spec (v0.4.0)
+- `./vcon-documentation/draft-ietf-vcon-vcon-core-02` - Core spec (v0.4.0)
 - `./vcon-documentation/draft-ietf-vcon-cc-extension-01` - Contact Center extension
 - `./vcon-documentation/draft-ietf-vcon-privacy-primer-00` - Privacy considerations
 - `./vcon-documentation/draft-howe-vcon-wtf-extension-01` - World Transcription Format extension
@@ -52,7 +52,7 @@ This skill provides **comprehensive expertise on vCon (Virtualized Conversations
 ## Latest vCon Specification (v0.4.0)
 
 ### Current Version Status
-- **Active Draft**: draft-ietf-vcon-vcon-core-01 (October 2025)
+- **Active Draft**: draft-ietf-vcon-vcon-core-02 (January 2026)
 - **Version**: 0.4.0 (moving toward v1.0)
 - **Working Group**: IETF Virtualized Conversations (vcon)
 - **Status**: Internet-Draft (Standards Track)
@@ -64,14 +64,14 @@ This skill provides **comprehensive expertise on vCon (Virtualized Conversations
 - Working toward semantic versioning in future releases
 
 **New Parameters:**
-- `must_support`: "String[]" - Lists incompatible extensions that MUST be supported
+- `critical`: "String[]" - Lists incompatible extensions that MUST be supported (renamed from `must_support`)
 - `did`: Decentralized Identifier support added to Party Object
 - `product`: New Analysis Object parameter to identify vendor products
 - `timezone`: New Party Object parameter for party location timezone
 
 **Extension Framework Enhancements:**
 - Compatible vs. Incompatible extension classification
-- Extensions listed in `must_support` MUST be supported to correctly interpret the vCon
+- Extensions listed in `critical` MUST be supported to correctly interpret the vCon
 - New IANA registries for vCon parameters and extensions
 - Standardized extension naming conventions
 
@@ -114,14 +114,14 @@ vCons exist in three distinct security forms:
 ```json
 {
   "extensions": ["CC", "MIMI"],
-  "must_support": ["CUSTOM-EXTENSION"],
+  "critical": ["CUSTOM-EXTENSION"],
   "updated_at": "2025-10-20T15:45:00.000Z",
   "subject": "Customer support call regarding order #12345",
   "dialog": [...],
   "analysis": [...],
   "attachments": [...],
   "redacted": {...},
-  "appended": {...},
+  "amended": {...},
   "group": [...]
 }
 ```
@@ -141,7 +141,6 @@ Represents participants in the conversation:
   "did": "did:example:123456789abcdefghi",
   "uuid": "550e8400-e29b-41d4-a716-446655440000",
   "validation": "SSN-last-4",
-  "jcard": {...},
   "gmlpos": "40.7128 -74.0060",
   "civicaddress": {
     "country": "US",
@@ -199,8 +198,9 @@ Post-conversation analysis results:
 ```
 
 **Analysis Types:**
+- `report` - General analysis report
 - `summary` - Conversation summary
-- `transcript` - Speech-to-text transcription  
+- `transcript` - Speech-to-text transcription
 - `translation` - Language translation
 - `sentiment` - Sentiment analysis
 - `tts` - Text-to-speech generation
@@ -211,7 +211,7 @@ Related documents and files:
 
 ```json
 {
-  "type": "contract",
+  "purpose": "contract",
   "start": "2025-10-20T14:35:00.000Z",
   "party": 0,
   "dialog": 0,
@@ -727,6 +727,31 @@ Standardized transcription analysis framework (draft-howe-vcon-wtf-extension-01)
 - **Speaker Diarization**: "Who spoke when" analysis support
 - **Extensibility**: Provider-specific features preserved in extensions field
 
+## Changes in draft-ietf-vcon-vcon-core-02
+
+### Key Updates from -01 to -02
+
+**Field Renames:**
+- `must_support` → `critical` (incompatible extension declaration)
+- Attachment Object: `type` → `purpose` (semantic clarification)
+- Party history events: `dtmfdown`/`dtmfup` → `keydown`/`keyup` (broader applicability)
+- Party history parameter: `dtmf` → `button` (supports DTMF and application keys/buttons)
+
+**Removed Fields:**
+- `jCard` removed from Party Object
+
+**New Fields and Types:**
+- `report` added as a new Analysis type
+- Group Object expanded with `body` and `encoding` parameters
+
+**Semantic Changes:**
+- **Session ID**: Null/unknown session IDs now use empty object `{}` instead of `null`
+- **Anonymous Parties**: Party `name` may be "anonymous" for privacy; each anonymous participant requires a distinct Party Object
+- **Dialog Transfer**: Missing dialog information uses empty Dialog Objects at corresponding indices instead of index `-1`
+
+**New Sections:**
+- **Long-Term Archiving (Section 5.2.3)**: Nested JWS signing approach for maintaining integrity over extended archival periods (JWS3→JWS2→JWS1→vCon nesting)
+
 ## Q&A Expertise
 
 This skill can answer questions about:
@@ -778,7 +803,7 @@ This skill can answer questions about:
 
 4. **Extension Validation**
    - Declared extensions used
-   - must_support extensions recognized
+   - `critical` extensions recognized
    - Extension-specific fields valid
 
 5. **Security Validation**
@@ -864,7 +889,7 @@ type VCon struct {
     VCon        string      `json:"vcon"`
     UUID        string      `json:"uuid"`
     Extensions  []string    `json:"extensions,omitempty"`
-    MustSupport []string    `json:"must_support,omitempty"`
+    Critical    []string    `json:"critical,omitempty"`
     CreatedAt   time.Time   `json:"created_at"`
     UpdatedAt   *time.Time  `json:"updated_at,omitempty"`
     Subject     string      `json:"subject,omitempty"`
@@ -873,11 +898,13 @@ type VCon struct {
     Analysis    []Analysis  `json:"analysis,omitempty"`
     Attachments []Attachment `json:"attachments,omitempty"`
     Redacted    *Redacted   `json:"redacted,omitempty"`
-    Appended    *Appended   `json:"appended,omitempty"`
+    Amended     *Amended    `json:"amended,omitempty"`
     Group       []Group     `json:"group,omitempty"`
 }
 
 // Party represents a participant in the conversation
+// Note: jCard has been removed in draft-ietf-vcon-vcon-core-02
+// Names may be "anonymous" for privacy; distinct Party Objects required per anonymous participant
 type Party struct {
     Tel          string       `json:"tel,omitempty"`
     SIP          string       `json:"sip,omitempty"`
@@ -957,7 +984,7 @@ interface VCon {
   dialog?: Dialog[];
   analysis?: Analysis[];
   extensions?: string[];
-  must_support?: string[];
+  critical?: string[];
 }
 
 interface Party {
@@ -1162,7 +1189,7 @@ class VCon(BaseModel):
     dialog: Optional[List[Dialog]] = None
     analysis: Optional[List[Analysis]] = None
     extensions: Optional[List[str]] = None
-    must_support: Optional[List[str]] = None
+    critical: Optional[List[str]] = None
     
     @validator('vcon')
     def validate_version(cls, v):
@@ -1234,6 +1261,7 @@ class VConAnalyzer:
             'num_analysis': len(self.vcon.analysis) if self.vcon.analysis else 0,
             'total_duration': self.get_conversation_duration(),
             'extensions_used': self.vcon.extensions or [],
+            'critical_extensions': self.vcon.critical or [],
             'has_recordings': any(
                 d.type == 'recording' 
                 for d in (self.vcon.dialog or [])
@@ -1395,7 +1423,7 @@ if __name__ == '__main__':
 
 **"Extension not declared"**
 - Fix: Add extension name to extensions array
-- Check must_support for incompatible extensions
+- Check `critical` for incompatible extensions
 - Verify extension-specific fields are valid
 
 ### Performance Issues
@@ -1579,10 +1607,11 @@ async function encryptVCon(signedVCon, publicKey) {
 
 ### IETF Specifications
 
-- **draft-ietf-vcon-vcon-core-00** (July 2025)
+- **draft-ietf-vcon-vcon-core-02** (January 2026)
   - Core vCon specification
   - JSON schema definition
   - Security considerations
+  - Long-term archiving with nested JWS signing
 
 - **draft-ietf-vcon-cc-extension-01**
   - Contact Center extension

@@ -6,8 +6,12 @@ This directory contains the IETF draft documents that define the vCon standard. 
 
 ## Included Files
 
+✅ **draft-ietf-vcon-vcon-core-02** (278 KB)
+   - Core vCon JSON schema specification (January 2026)
+   - Key changes from -01: `critical` replaces `must_support`, attachment `purpose` replaces `type`, `report` analysis type, jCard removed, long-term archiving guidance
+
 ✅ **draft-ietf-vcon-vcon-core-01** (257 KB)
-   - Core vCon JSON schema specification
+   - Previous version of core spec (October 2025, retained for reference)
 
 ✅ **draft-ietf-vcon-cc-extension-01** (31 KB)
    - Contact Center specific extensions

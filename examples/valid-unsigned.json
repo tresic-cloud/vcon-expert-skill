@@ -55,7 +55,7 @@
       "start": "2025-10-20T14:32:00.000Z",
       "party": 1,
       "dialog": 0,
-      "type": "order_details",
+      "purpose": "order_details",
       "mediatype": "application/pdf",
       "filename": "order-12345.pdf",
       "url": "https://storage.example.com/attachments/order-12345.pdf",

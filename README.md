@@ -10,14 +10,14 @@ This skill builds upon the existing vCon validator by adding:
 
 1. **Deep Q&A Capabilities** - Answer any question about vCons, their structure, use cases, and best practices
 2. **Multi-Language Code Generation** - Generate production-ready code in Go, JavaScript, and Python
-3. **Latest IETF Updates** - Incorporates information from the July 2025 draft specifications
+3. **Latest IETF Updates** - Incorporates information from the January 2026 draft specifications
 4. **Extension Expertise** - Deep knowledge of CC, MIMI, WTF, and other extensions
 5. **Architecture Guidance** - Provides system design advice for vCon integration
 
 ## Features
 
 ### 1. Validation & Compliance
-- Validates vCon JSON files against IETF draft-ietf-vcon-vcon-core-00
+- Validates vCon JSON files against IETF draft-ietf-vcon-vcon-core-02
 - Checks all three forms: unsigned, signed (JWS), and encrypted (JWE)
 - Validates extensions: CC (Contact Center), MIMI (Messaging), WTF (Transcription)
 - Generates detailed validation reports with specific fix recommendations
@@ -26,7 +26,7 @@ This skill builds upon the existing vCon validator by adding:
 ### 2. Expert Q&A System
 Ask Claude anything about vCons:
 - "How do vCon redactions work?"
-- "What's the difference between must_support and extensions?"
+- "What's the difference between critical and extensions?"
 - "When should I use inline vs external references?"
 - "How do I implement a custom extension?"
 - "What are best practices for contact center integration?"
@@ -89,12 +89,16 @@ Ask Claude anything about vCons:
 - Platform-independent ZIP format
 - Media type: `application/vcon+zip`
 
-## Latest Specification Updates (July 2025)
+## Latest Specification Updates (January 2026)
 
-This skill incorporates the latest changes from draft-ietf-vcon-vcon-core-00:
+This skill incorporates the latest changes from draft-ietf-vcon-vcon-core-02:
 
-- **Version**: 0.3.0 (moving toward v1.0)
-- **New Fields**: `must_support`, `did`, `product`, `timezone`
+- **Version**: 0.4.0 (moving toward v1.0)
+- **Renamed Fields**: `must_support` → `critical`, attachment `type` → `purpose`, `dtmfdown`/`dtmfup` → `keydown`/`keyup`
+- **New**: `report` analysis type, expanded Group Object with `body`/`encoding`
+- **Removed**: `jCard` from Party Object
+- **Semantic Changes**: Session ID uses empty object `{}` instead of `null`, anonymous party guidance, dialog transfer uses empty Dialog Objects
+- **Security**: Long-term archiving with nested JWS signing (Section 5.2.3)
 - **Extension Framework**: Compatible vs. Incompatible classification
 - **Media Types**: Registered `application/vcon+json`, `application/vcon+gzip`, and `application/vcon+zip`
 - **UUID**: Preference for UUID v8 with FQHN-based generation
@@ -107,7 +111,7 @@ vcon-expert-skill/
 ├── SKILL.md                    # Main skill file (use this with Claude)
 ├── README.md                   # This file
 ├── vcon-documentation/         # IETF specifications
-│   ├── draft-ietf-vcon-vcon-core-01
+│   ├── draft-ietf-vcon-vcon-core-02
 │   ├── draft-ietf-vcon-cc-extension-01
 │   ├── draft-ietf-vcon-privacy-primer-00
 │   ├── draft-miller-vcon-zip-bundle-00
@@ -190,7 +194,7 @@ vcon-expert-skill/
 ├── SKILL.md                    # 📌 Main skill file (upload this)
 ├── README.md                   # This file
 ├── vcon-documentation/        # IETF specifications (optional)
-│   ├── draft-ietf-vcon-vcon-core-01
+│   ├── draft-ietf-vcon-vcon-core-02
 │   ├── draft-ietf-vcon-cc-extension-01
 │   └── ...
 └── examples/                  # Example vCon files (optional)
@@ -253,7 +257,7 @@ Claude: I'll validate your vCon against the IETF specification...
 ```
 
 ### Quick Validation Checklist
-- [ ] `"vcon": "0.3.0"` present
+- [ ] `"vcon": "0.4.0"` present (version field deprecated in -02, but still required)
 - [ ] Valid UUID (v4 or v8 format)
 - [ ] RFC 3339 timestamps (`YYYY-MM-DDTHH:MM:SS.sssZ`)
 - [ ] At least one party in `parties` array
@@ -265,7 +269,7 @@ Claude: I'll validate your vCon against the IETF specification...
 ### vCon Structure Quick Reference
 ```json
 {
-  "vcon": "0.3.0",
+  "vcon": "0.4.0",
   "uuid": "018c8a7e-5f3d-8000-9a2b-3c4d5e6f7a8b",
   "created_at": "2025-10-20T14:30:00.000Z",
   "parties": [{"tel": "+1-555-0100", "name": "Alice"}],
@@ -285,7 +289,7 @@ I'll validate your vCon against the IETF specification...
 
 # vCon Validation Report
 **File**: customer-call.json
-**vCon Version**: 0.3.0
+**vCon Version**: 0.4.0
 **Form**: unsigned
 
 ## Compliance Status
@@ -316,7 +320,7 @@ Claude: [Reads relevant sections from SKILL.md and specifications]
 Great question! vCon versioning with redactions follows a specific pattern...
 
 When creating a redacted vCon:
-1. The redacted vCon maintains the same vCon version (0.3.0)
+1. The redacted vCon maintains the same vCon version (0.4.0)
 2. It gets a NEW uuid (different from the original)
 3. The `redacted` object references the original vCon's uuid
 4. The `created_at` reflects when the redacted version was created
@@ -421,7 +425,7 @@ and implementation code in all three languages]
 1. **Unsigned** - Mutable, for in-progress conversations
    ```json
    {
-     "vcon": "0.3.0",
+     "vcon": "0.4.0",
      "uuid": "...",
      "parties": [...],
      "dialog": [...]
@@ -431,7 +435,7 @@ and implementation code in all three languages]
 2. **Signed (JWS)** - Immutable, integrity-protected
    ```json
    {
-     "vcon": "0.3.0",
+     "vcon": "0.4.0",
      "uuid": "...",
      "payload": "base64url_encoded_unsigned_vcon",
      "signatures": [...]
@@ -441,7 +445,7 @@ and implementation code in all three languages]
 3. **Encrypted (JWE)** - Confidential, privacy-protected
    ```json
    {
-     "vcon": "0.3.0",
+     "vcon": "0.4.0",
      "uuid": "...",
      "ciphertext": "encrypted_signed_vcon",
      "recipients": [...]
@@ -470,13 +474,13 @@ Signed Redacted vCon
 **Compatible Extensions:**
 - Add new fields without changing existing semantics
 - Can be safely ignored by implementations that don't support them
-- Don't require listing in `must_support`
+- Don't require listing in `critical`
 - Example: CC extension adds contact center fields
 
 **Incompatible Extensions:**
 - Change existing field meanings or structure
 - Require explicit support for correct interpretation
-- MUST be listed in `must_support` array
+- MUST be listed in `critical` array
 - Example: Extension that changes `parties` array semantics
 
 ## Troubleshooting
@@ -492,7 +496,7 @@ Signed Redacted vCon
 - Ask for dependency list if using external packages
 
 ### "Validation failing unexpectedly"
-- Verify vCon version matches (0.3.0)
+- Verify vCon version field is "0.4.0"
 - Check that all required fields are present
 - Ensure party indices don't exceed array bounds
 - Validate timestamp format (RFC 3339)
@@ -501,7 +505,7 @@ Signed Redacted vCon
 - Check if extension is declared in `extensions` array
 - Verify extension spelling and case
 - Confirm extension-specific fields are correctly formatted
-- Check if it needs to be in `must_support`
+- Check if it needs to be in `critical`
 
 ## Best Practices
 
@@ -545,7 +549,7 @@ Signed Redacted vCon
 | Extension Expertise | ✅ CC only | ✅ CC, MIMI, WTF, Custom |
 | Architecture Guidance | ❌ No | ✅ Yes |
 | Use Case Examples | ✅ Basic | ✅ Extensive |
-| Latest IETF Updates | ❌ 0.4.0 | ✅ 0.3.0 (July 2025) |
+| Latest IETF Updates | ❌ Older | ✅ 0.4.0 (January 2026) |
 
 ## Support & Resources
 
@@ -569,17 +573,25 @@ This skill is based on IETF drafts which are continuously evolving. To update:
 
 ## Version History
 
+### v1.1 (February 2026)
+- Updated to draft-ietf-vcon-vcon-core-02 (January 2026)
+- Field renames: `must_support` → `critical`, attachment `type` → `purpose`, `dtmf` events → `key` events
+- New `report` analysis type
+- Removed jCard from Party Object
+- Added anonymous party guidance, session ID empty object semantics
+- Added long-term archiving with nested JWS signing
+
 ### v1.0 (October 2025)
 - Initial release of enhanced vCon Expert skill
 - Multi-language code generation (Go, JavaScript, Python)
 - Comprehensive Q&A capabilities
-- Latest IETF specifications (draft-ietf-vcon-vcon-core-00)
+- Latest IETF specifications (draft-ietf-vcon-vcon-core-01)
 - Extension framework expertise
 - Architecture guidance
 
 ### Based on
 - vcon-validator-go-code-generator (original validator skill)
-- IETF vCon Working Group specifications (July 2025)
+- IETF vCon Working Group specifications (January 2026)
 - Real-world use cases from contact centers, messaging platforms, and emergency services
 
 ## License
@@ -626,7 +638,7 @@ This vCon Expert skill represents a comprehensive upgrade from basic validators:
 **Key Enhancements:**
 - ✅ Multi-language code generation (Go, JavaScript, Python)
 - ✅ Comprehensive Q&A capabilities
-- ✅ Latest IETF specifications (draft-ietf-vcon-vcon-core-00)
+- ✅ Latest IETF specifications (draft-ietf-vcon-vcon-core-02)
 - ✅ Extension framework expertise (CC, MIMI, WTF, Custom)
 - ✅ Architecture guidance and best practices
 - ✅ Real-world use case examples
@@ -648,7 +660,7 @@ vcon-expert-skill/
 ├── SKILL.md                    # Main skill file (upload to Claude)
 ├── README.md                   # This documentation
 ├── vcon-documentation/         # IETF specifications
-│   ├── draft-ietf-vcon-vcon-core-01
+│   ├── draft-ietf-vcon-vcon-core-02
 │   ├── draft-ietf-vcon-cc-extension-01
 │   └── ...
 ├── examples/                   # Example vCon files
