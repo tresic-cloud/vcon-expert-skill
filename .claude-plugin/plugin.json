@@ -1,0 +1,6 @@
+{
+  "name": "vcon-expert-skill",
+  "description": "Comprehensive vCon (Virtualized Conversations) expert — validation, analysis, Q&A, and code generation based on latest IETF draft specifications",
+  "version": "1.0.0",
+  "author": { "name": "Tresic Solutions" }
+}
